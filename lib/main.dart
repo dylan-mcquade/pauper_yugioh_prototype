@@ -6,35 +6,48 @@ import 'package:flutter/services.dart';
 import 'dart:io'; //CUSTOM CHANGE
 
 void main() {
-  setupDatabase();
   runApp(Home());
 }
 
 //Taken from https://github.com/tekartik/sqflite/blob/master/sqflite/doc/opening_asset_db.md
-Future<void> setupDatabase() async {
-  var databasesPath = await getDatabasesPath();
-  var path = join(databasesPath, "yugiohPauper2.db");
+class DatabaseHelper {
+  var db;
+  var initialized = false;
 
-  var exists = await databaseExists(path);
-  print(exists);
+  Future<Database> setupDatabase() async {
+    var databasesPath = await getDatabasesPath();
+    var path = join(databasesPath, "yugiohPauper2.db");
 
-  if (!exists) {
-    try {
-      await Directory(dirname(path)).create(recursive: true);
-    } catch (_) {}
+    var exists = await databaseExists(path);
+    print(exists);
 
-    ByteData data = await rootBundle.load(join("assets", "yugiohPauper2.db"));
-    List<int> bytes =
-        data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+    if (!exists) {
+      try {
+        await Directory(dirname(path)).create(recursive: true);
+      } catch (_) {}
 
-    await File(path).writeAsBytes(bytes, flush: true);
-  } else {}
+      ByteData data = await rootBundle.load(join("assets", "yugiohPauper2.db"));
+      List<int> bytes =
+      data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
 
-  var db = await openDatabase(path, readOnly: true);
-}
+      await File(path).writeAsBytes(bytes, flush: true);
+    } else {}
 
-Future<void> performSearch() async {
-  List<Map> result = await db.rawQuery('SELECT * FROM my_table WHERE name=?', ['Mary']);
+    var db = await openDatabase(path, readOnly: true);
+    return db;
+  }
+
+  void _initialize(){
+    if(!initialized){
+      db = setupDatabase();
+      initialized = true;
+    }
+  }
+
+  Future<List<Map>> performSearch() async {
+    List<Map> result = await db.rawQuery("SELECT * FROM cards WHERE name=?", "Forest");
+    return result;
+  }
 }
 
 class Home extends StatelessWidget {
@@ -81,6 +94,10 @@ class SearchInput extends StatefulWidget {
 }
 
 class _SearchInputState extends State<SearchInput> {
+
+  DatabaseHelper dbHelper = DatabaseHelper();
+  List<Map> results = [];
+
   List<String> attributes = [
     "Default",
     "Fire",
@@ -231,7 +248,13 @@ class _SearchInputState extends State<SearchInput> {
           ),
           ElevatedButton(
             child: const Text('Search'),
-            onPressed: () {
+            onPressed: () async {
+              //dbHelper._initialize();
+              //results = await dbHelper.performSearch();
+              //print(results);
+              Database newDB = await dbHelper.setupDatabase();
+              results = await newDB.rawQuery("SELECT * FROM cards WHERE name=?", ["Forest"]);
+              print(results);
               Navigator.push(
                   this.context,
                   MaterialPageRoute(builder: (context) => const SearchResults())
