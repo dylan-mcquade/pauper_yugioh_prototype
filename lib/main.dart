@@ -11,7 +11,7 @@ void main() {
 
 //Taken from https://github.com/tekartik/sqflite/blob/master/sqflite/doc/opening_asset_db.md
 class DatabaseHelper {
-  var db;
+  late Database db;
   var initialized = false;
 
   Future<Database> setupDatabase() async {
@@ -37,15 +37,35 @@ class DatabaseHelper {
     return db;
   }
 
-  void _initialize(){
+  Future<void> _initialize() async {
     if(!initialized){
-      db = setupDatabase();
+      db = await setupDatabase();
       initialized = true;
     }
   }
 
-  Future<List<Map>> performSearch() async {
-    List<Map> result = await db.rawQuery("SELECT * FROM cards WHERE name=?", "Forest");
+  Future<List<Map>> performSearch(String name, String description, String minAttack, String maxAttack,
+      String minDefense, String maxDefense, String minLevel, String maxLevel, String minLinkRating,
+      String maxLinkRating, String minPendulumScale, String maxPendulumScale, String attribute,
+      String cardType, String race) async {
+    List<Map> result = await db.rawQuery("SELECT * FROM cards WHERE "
+        "name=?"
+        "AND desc=?"
+        "AND attribute=?"
+        "AND race=?"
+        "AND type=?"
+        "AND atk >=?"
+        "AND atk <=?"
+        "AND def >=?"
+        "AND def <=?"
+        "AND level >=?"
+        "AND level <=?"
+        "AND linkRating >=?"
+        "AND linkRating <=?"
+        "AND pendulumScale >=?"
+        "AND pendulumScale <=?",
+        [name, description, attribute, race, cardType, minAttack, maxAttack, minDefense, maxDefense, minLevel, maxLevel,
+        minLinkRating, maxLinkRating, minPendulumScale, maxPendulumScale]);
     return result;
   }
 }
@@ -166,9 +186,21 @@ class _SearchInputState extends State<SearchInput> {
     "Union Effect Monster"
   ];
 
-  String attributeValue = "Default";
-  String raceValue = "Default";
-  String cardTypeValue = "Default";
+  String attribute = "Default";
+  String race = "Default";
+  String cardType = "Default";
+  String name = "Default";
+  String description = "Default";
+  String minAttack = "Default";
+  String maxAttack = "Default";
+  String minDefense = "Default";
+  String maxDefense = "Default";
+  String minLevel = "Default";
+  String maxLevel = "Default";
+  String minLinkRating = "Default";
+  String maxLinkRating = "Default";
+  String minPendulumScale = "Default";
+  String maxPendulumScale = "Default";
 
   final nameController = TextEditingController();
   final descriptionController = TextEditingController();
@@ -199,9 +231,9 @@ class _SearchInputState extends State<SearchInput> {
     return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          _dropdownButtons(_changeAttribute, attributeValue, attributes),
-          _dropdownButtons(_changeRace, raceValue, races),
-          _dropdownButtons(_changeCardType, cardTypeValue, cardTypes),
+          _dropdownButtons(_changeAttribute, attribute, attributes),
+          _dropdownButtons(_changeRace, race, races),
+          _dropdownButtons(_changeCardType, cardType, cardTypes),
           Row(
             children: [const Text("Name"), _tinyTextField(nameController)],
           ),
@@ -249,12 +281,10 @@ class _SearchInputState extends State<SearchInput> {
           ElevatedButton(
             child: const Text('Search'),
             onPressed: () async {
-              //dbHelper._initialize();
-              //results = await dbHelper.performSearch();
-              //print(results);
-              Database newDB = await dbHelper.setupDatabase();
-              results = await newDB.rawQuery("SELECT * FROM cards WHERE name=?", ["Forest"]);
-              print(results);
+              dbHelper._initialize();
+              getVariables();
+              dbHelper.performSearch(name, description, minAttack, maxAttack, minDefense, maxDefense, minLevel, maxLevel,
+              minLinkRating, maxLinkRating, minPendulumScale, maxPendulumScale, attribute, cardType, race);
               Navigator.push(
                   this.context,
                   MaterialPageRoute(builder: (context) => const SearchResults())
@@ -283,15 +313,15 @@ class _SearchInputState extends State<SearchInput> {
   }
 
   void _changeAttribute(String newValue){
-    attributeValue = newValue;
+    attribute = newValue;
   }
 
   void _changeCardType(String newValue){
-    cardTypeValue = newValue;
+    cardType = newValue;
   }
 
   void _changeRace(String newValue){
-    raceValue = newValue;
+    race = newValue;
   }
 
   Widget _tinyTextField(TextEditingController textController) {
@@ -301,6 +331,21 @@ class _SearchInputState extends State<SearchInput> {
             focusNode: FocusNode(canRequestFocus: false),
             controller: textController,
             decoration: InputDecoration(border: OutlineInputBorder())));
+  }
+
+  void getVariables(){
+    name = nameController.text;
+    description = descriptionController.text;
+    minAttack = minAttackController.text;
+    maxAttack = maxAttackController.text;
+    minDefense = minDefenseController.text;
+    maxDefense = maxDefenseController.text;
+    minLevel = minLevelController.text;
+    maxLevel = maxLevelController.text;
+    minLinkRating = minLinkRatingController.text;
+    maxLinkRating = maxLinkRatingController.text;
+    minPendulumScale = minPendulumScaleController.text;
+    maxPendulumScale = maxPendulumScaleController.text;
   }
 }
 
