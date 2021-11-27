@@ -41,6 +41,7 @@ class DatabaseHelper {
     if(!initialized){
       db = await setupDatabase();
       initialized = true;
+      print(db);
     }
   }
 
@@ -48,6 +49,7 @@ class DatabaseHelper {
       String minDefense, String maxDefense, String minLevel, String maxLevel, String minLinkRating,
       String maxLinkRating, String minPendulumScale, String maxPendulumScale, String attribute,
       String cardType, String race) async {
+
     List<Map> result = await db.rawQuery("SELECT * FROM cards WHERE "
         "name=?"
         "AND desc=?"
@@ -66,6 +68,8 @@ class DatabaseHelper {
         "AND pendulumScale <=?",
         [name, description, attribute, race, cardType, minAttack, maxAttack, minDefense, maxDefense, minLevel, maxLevel,
         minLinkRating, maxLinkRating, minPendulumScale, maxPendulumScale]);
+
+    //List<Map> result = await db.rawQuery("SELECT * FROM cards WHERE name=?", ["Forest"]);
     return result;
   }
 }
@@ -93,6 +97,7 @@ class SearchResults extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    List<Map> resultsList = ModalRoute.of(context)!.settings.arguments as List<Map>;
     return MaterialApp(
       title: 'Pauper Yugioh Search Results',
       theme: ThemeData(
@@ -101,7 +106,7 @@ class SearchResults extends StatelessWidget {
           foregroundColor: Colors.black,
         ),
       ),
-      home: Results(),
+      home: Results(resultsList: resultsList),
     );
   }
 }
@@ -187,8 +192,11 @@ class _SearchInputState extends State<SearchInput> {
   ];
 
   String attribute = "Default";
+  String attributeValue = "";
   String race = "Default";
+  String raceValue = "";
   String cardType = "Default";
+  String cardTypeValue = "";
   String name = "Default";
   String description = "Default";
   String minAttack = "Default";
@@ -281,13 +289,16 @@ class _SearchInputState extends State<SearchInput> {
           ElevatedButton(
             child: const Text('Search'),
             onPressed: () async {
-              dbHelper._initialize();
+              await dbHelper._initialize();
               getVariables();
-              dbHelper.performSearch(name, description, minAttack, maxAttack, minDefense, maxDefense, minLevel, maxLevel,
-              minLinkRating, maxLinkRating, minPendulumScale, maxPendulumScale, attribute, cardType, race);
+              List<Map> results = await dbHelper.performSearch(name, description, minAttack, maxAttack, minDefense, maxDefense, minLevel, maxLevel,
+              minLinkRating, maxLinkRating, minPendulumScale, maxPendulumScale, attributeValue, cardTypeValue, raceValue);
               Navigator.push(
                   this.context,
-                  MaterialPageRoute(builder: (context) => const SearchResults())
+                  MaterialPageRoute(builder: (context) => const SearchResults(),
+                  settings: RouteSettings(
+                    arguments: results
+                  ))
               );
             }
           ),
@@ -334,23 +345,102 @@ class _SearchInputState extends State<SearchInput> {
   }
 
   void getVariables(){
-    name = nameController.text;
-    description = descriptionController.text;
-    minAttack = minAttackController.text;
-    maxAttack = maxAttackController.text;
-    minDefense = minDefenseController.text;
-    maxDefense = maxDefenseController.text;
-    minLevel = minLevelController.text;
-    maxLevel = maxLevelController.text;
-    minLinkRating = minLinkRatingController.text;
-    maxLinkRating = maxLinkRatingController.text;
-    minPendulumScale = minPendulumScaleController.text;
-    maxPendulumScale = maxPendulumScaleController.text;
+    if(nameController.text != ""){
+      name = nameController.text;
+    }
+    else{
+      name = "*";
+    }
+    if(descriptionController.text != ""){
+      description = descriptionController.text;
+    }
+    else{
+      description = "*";
+    }
+    if(minAttackController.text != ""){
+      minAttack = minAttackController.text;
+    }
+    else{
+      minAttack = "0";
+    }
+    if(maxAttackController.text != ""){
+      maxAttack = maxAttackController.text;
+    }
+    else{
+      maxAttack = "100000";
+    }
+    if(minDefenseController.text != ""){
+      minDefense = minDefenseController.text;
+    }
+    else{
+      minDefense = "0";
+    }
+    if(maxDefenseController.text != ""){
+      maxDefense = maxDefenseController.text;
+    }
+    else{
+      maxDefense = "100000";
+    }
+    if(minLevelController.text != ""){
+      minLevel = minLevelController.text;
+    }
+    else{
+      minLevel = "0";
+    }
+    if(maxLevelController.text != ""){
+      maxLevel = maxLevelController.text;
+    }
+    else{
+      maxLevel = "100000";
+    }
+    if(minLinkRatingController.text != ""){
+      minLinkRating = minLinkRatingController.text;
+    }
+    else{
+      minLinkRating = "0";
+    }
+    if(maxLinkRatingController.text != ""){
+      maxLinkRating = maxLinkRatingController.text;
+    }
+    else{
+      maxLinkRating = "100000";
+    }
+    if(minPendulumScaleController.text != ""){
+      minPendulumScale = minPendulumScaleController.text;
+    }
+    else{
+      minPendulumScale = "0";
+    }
+    if(maxPendulumScaleController.text != ""){
+      maxPendulumScale = maxPendulumScaleController.text;
+    }
+    else{
+      maxPendulumScale = "100000";
+    }
+    if(attribute == "Default"){
+      attributeValue = "*";
+    }
+    else{
+      attributeValue = attribute;
+    }
+    if(race == "Default"){
+      raceValue = "*";
+    }
+    else{
+      raceValue = race;
+    }
+    if(cardType == "Default") {
+      cardTypeValue = "*";
+    }
+    else{
+      cardTypeValue = cardType;
+    }
   }
 }
 
 class Results extends StatefulWidget {
-  const Results({Key? key}) : super(key: key);
+  final List<Map> resultsList;
+  const Results({Key? key, required this.resultsList}) : super(key: key);
 
   @override
   _ResultsState createState() => _ResultsState();
@@ -365,32 +455,48 @@ class _ResultsState extends State<Results> {
       ),
       body: ListView.builder(
           padding: const EdgeInsets.all(8),
+          itemCount: widget.resultsList.length,
           itemBuilder: (BuildContext context, int index) {
             return Container(
-              child: _individualResult()
+              child: _individualResult(widget.resultsList[index])
             );
           }
       )
     );
   }
 
-  Widget _individualResult(){
+  Widget _individualResult(Map result){
     return(
       Column(
         children: <Widget>[
           Text("Name"),
+          Text(cleanText(result["name"])),
           Text("Description"),
+          Text(cleanText(result["desc"])),
           Text("Attribute"),
+          Text(cleanText(result["attribute"])),
           Text("Level or Rank"),
+          Text(cleanText(result["level"])),
           Text("Type"),
+          Text(cleanText(result["race"])),
           Text("Card Type"),
+          Text(cleanText(result["type"])),
           Text("Attack"),
+          Text(cleanText(result["atk"])),
           Text("Defense"),
+          Text(cleanText(result["def"])),
           Text("Link Rating"),
-          Text("Pendulum Scales")
+          Text(cleanText(result["linkRating"])),
+          Text("Pendulum Scales"),
+          Text(cleanText(result["pendulumScale"])),
         ],
       )
     );
+  }
+
+  String cleanText(dynamic text){
+    text ??= "";
+    return text;
   }
 }
 
