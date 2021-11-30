@@ -312,46 +312,46 @@ class _SearchInputState extends State<SearchInput> {
           _dropdownButtons(_changeRace, race, races),
           _dropdownButtons(_changeCardType, cardType, cardTypes),
           Row(
-            children: [const Text("Name"), _tinyTextField(nameController)],
+            children: [const Text("Name: "), _tinyTextField(nameController)],
           ),
           Row(
             children: [
-              const Text("Description"),
+              const Text("Description: "),
               _tinyTextField(descriptionController)
             ],
           ),
           Row(
             children: [
               _tinyTextField(minAttackController),
-              const Text("≤ Attack ≤"),
+              const Text(" ≤ Attack ≤ "),
               _tinyTextField(maxAttackController)
             ],
           ),
           Row(
             children: [
               _tinyTextField(minDefenseController),
-              const Text("≤ Defense ≤"),
+              const Text(" ≤ Defense ≤ "),
               _tinyTextField(maxDefenseController)
             ],
           ),
           Row(
             children: [
               _tinyTextField(minLevelController),
-              const Text("≤ Level/Rank ≤"),
+              const Text(" ≤ Level/Rank ≤ "),
               _tinyTextField(maxLevelController)
             ],
           ),
           Row(
             children: [
               _tinyTextField(minLinkRatingController),
-              const Text("≤ Link Rating ≤"),
+              const Text(" ≤ Link Rating ≤ "),
               _tinyTextField(maxLinkRatingController)
             ],
           ),
           Row(
             children: [
               _tinyTextField(minPendulumScaleController),
-              const Text("≤ Pendulum Scale ≤"),
+              const Text(" ≤ Pendulum Scale ≤ "),
               _tinyTextField(maxPendulumScaleController)
             ],
           ),
@@ -418,7 +418,7 @@ class _SearchInputState extends State<SearchInput> {
 
   Widget _tinyTextField(TextEditingController textController) {
     return SizedBox(
-        width: 100,
+        width: 90,
         child: TextField(
             focusNode: FocusNode(canRequestFocus: false),
             controller: textController,
@@ -532,26 +532,62 @@ class _ResultsState extends State<Results> {
     return (Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text("Name"),
-        Text(cleanText(result["name"])),
-        Text("Description"),
+        Row(
+          children: [
+            Text("Name: "),
+            Text(cleanText(result["name"])),
+          ],
+        ),
+        Text("Description: "),
         Text(cleanText(result["desc"])),
-        Text("Attribute"),
-        Text(cleanText(result["attribute"])),
-        Text("Level or Rank"),
-        Text(cleanInt(result["level"])),
-        Text("Type"),
-        Text(cleanText(result["race"])),
-        Text("Card Type"),
-        Text(cleanText(result["type"])),
-        Text("Attack"),
-        Text(cleanInt(result["atk"])),
-        Text("Defense"),
-        Text(cleanInt(result["def"])),
-        Text("Link Rating"),
-        Text(cleanInt(result["linkRating"])),
-        Text("Pendulum Scales"),
-        Text(cleanInt(result["pendulumScale"])),
+        Row(
+          children: [
+            Text("Attribute: "),
+            Text(cleanText(result["attribute"])),
+          ],
+        ),
+        Row(
+          children: [
+            Text("Level or Rank: "),
+            Text(cleanInt(result["level"])),
+          ],
+        ),
+        Row(
+          children: [
+            Text("Type: "),
+            Text(cleanText(result["race"])),
+          ],
+        ),
+        Row(
+          children: [
+            Text("Card Type: "),
+            Text(cleanText(result["type"])),
+          ],
+        ),
+        Row(
+          children: [
+            Text("Attack: "),
+            Text(cleanInt(result["atk"])),
+          ],
+        ),
+        Row(
+          children: [
+            Text("Defense: "),
+            Text(cleanInt(result["def"])),
+          ],
+        ),
+        Row(
+          children: [
+            Text("Link Rating: "),
+            Text(cleanInt(result["linkRating"])),
+          ],
+        ),
+        Row(
+          children: [
+            Text("Pendulum Scales: "),
+            Text(cleanInt(result["pendulumScale"])),
+          ],
+        ),
         Divider()
       ],
     ));
